@@ -16,7 +16,7 @@ def BellmanFord(MultiGraph, source, target, weight):
     distance[source] = 0           # The weight is zero at the source
 
     # Step 2: relax edges repeatedly
-    for i in range(MultiGraph.number_of_nodes()-1):
+    for _ in range(MultiGraph.number_of_nodes()-1):
         is_update = False
         for tail in MultiGraph:
             for head, edges in MultiGraph[tail].items():
@@ -39,16 +39,14 @@ def BellmanFord(MultiGraph, source, target, weight):
 
 
 def shortest_path_bf(MultiGraph, source, target, weight):
-    distance, predecessor = BellmanFord(MultiGraph, source, target, weight)
-
-    curr_node = target
-    path_nodes = [curr_node]
+    if all(weights[weight] >= 0 for _, _, weights in MultiGraph.edges(data=True)):
+        path_nodes = nx.shortest_path(MultiGraph, source=source, target=target, weight=weight)
+    else:
+        path_nodes = nx.bellman_ford_path(MultiGraph, source, target, weight)
+    
     path_edges = []
-    while curr_node != source:
-        curr_node, curr_edge = predecessor[curr_node]
-        path_nodes.append(curr_node)
-        path_edges.append(curr_edge)
-    path_nodes = path_nodes[::-1]
-    path_edges = path_edges[::-1]
-
+    for tail, head in zip(path_nodes, path_nodes[1:]):
+            min_key = min(MultiGraph[tail][head], key=lambda edge_key: MultiGraph[tail][head][edge_key][weight])
+            path_edges.append((tail, head, min_key))
+    
     return path_nodes, path_edges

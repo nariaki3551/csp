@@ -3,7 +3,7 @@
 
 import networkx as nx
 
-from Bellman_Ford import shortest_path_bf
+from ShortestPath import shortest_path_bf
 
 def YenKSP(MultiGraph, source, target, weight):
     """ generator k shortest path """

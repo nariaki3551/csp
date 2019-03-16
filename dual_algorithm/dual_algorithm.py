@@ -8,9 +8,9 @@ from collections import defaultdict
 import time
 from sys import argv
 
-from Bellman_Ford import shortest_path_bf
-from Yen_KSP import YenKSP
-from Eppstein_KSP import EppsteinKSP
+from ShortestPath import shortest_path_bf
+from YenKSP import YenKSP
+from EppsteinKSP import EppsteinKSP
 
 
 __doc__ = f"""
@@ -24,7 +24,8 @@ Options:
 Notes:
     Build Date: Mar 7 2019
     Main Algorithm            : Hander-Zang algorithm
-    Shortest Path Algorithm   : Bellman-Ford algorithm
+    Shortest Path Algorithm   : Dijkstr algorithm
+                              : Bellman-Ford algorithm
     K Shortest Path Algorithm : Eppstein algorithm
                               : Yen algorithm
 
@@ -44,7 +45,7 @@ def usage():
 def main(edge_file, source, target, upper_bound):
     print('Build Date: Mar 07 2019')
     print('Main Algorithm            : Hander-Zang algorithm')
-    print('Shortest Path Algorithm   : Bellman-Ford algorithm')
+    print('Shortest Path Algorithm   : Dijkstra or Bellman-Ford algorithm')
     if YEN:
         print('K Shortest Path Algorithm : Yen algorithm')
     else:
@@ -143,25 +144,22 @@ def dual_algorithm(G, source, target, upper_bound):
     _, path_edges = shortest_path_bf(G, source, target, weight='c')
     path_length = sum(G[tail][head][key]['c'] for tail, head, key in path_edges)
     cost_length = sum(G[tail][head][key]['t'] for tail, head, key in path_edges) - upper_bound
-    shortest_length_path = path_edges
 
     if cost_length <= 0:
         opt_path = path_edges
         return opt_path, path_length, cost_length+upper_bound
     else:
-        opt_plus  = path_edges
         path_plus = path_length
         cost_plus = cost_length
         LB        = path_length
         print('We obtain shortest path on weight (#STEP1)')
         if PRINT_PATH: print(f'    path {path_edges}')
-        print(f'    f = {path_length:.3f}, g = {cost_length:.3f}\n')
+        print(f'    f = {path_length:.3f}, g = {cost_length+upper_bound:.3f}\n')
 
     # STEP2(obtain shortest path respect to "cost")
     _, path_edges = shortest_path_bf(G, source=source, target=target, weight='t')
     path_length = sum(G[tail][head][key]['c'] for tail, head, key in path_edges)
     cost_length = sum(G[tail][head][key]['t'] for tail, head, key in path_edges) - upper_bound
-    shortest_cost_path = path_edges
 
     if cost_length > 0:
         print(f'We find there is not a path satisfies the constrainet')
@@ -201,7 +199,7 @@ def dual_algorithm(G, source, target, upper_bound):
         path_length = sum(G[tail][head][key]['c'] for tail, head, key in path_edges)
         cost_length = sum(G[tail][head][key]['t'] for tail, head, key in path_edges) - upper_bound
         if cost_length == 0:
-            return path_edges, path_length, const_length+upper_bound # find opt sol
+            return path_edges, path_length, cost_length+upper_bound # find opt sol
         elif abs(Lu - L) < epsilon and cost_length < 0:
             opt_minus = path_edges
             if LB < Lu:
@@ -224,7 +222,6 @@ def dual_algorithm(G, source, target, upper_bound):
             print_log(step='#3', update=update, iter_count=iter_count, gap=(UB-LB)/(abs(UB)-1), LB=LB, UB=UB, time=time.time()-start_time)
             break
         elif cost_length > 0:
-            opt_plus  = path_edges
             path_plus = path_length
             cost_plus = cost_length
         elif cost_length <= 0:
@@ -245,10 +242,12 @@ def dual_algorithm(G, source, target, upper_bound):
 
     # STEP 4   CLOSING THE GAP
     H = convert_graph_weight(G, u)
-    k_shortest_paths = EppsteinKSP(H, source, target, 'w')
-    # k_shortest_paths = YenKSP(H, source, target, 'w')
-    _, first_path_edges = k_shortest_paths.__next__()
-    _, second_path_edges = k_shortest_paths.__next__()
+    if YEN:
+        k_shortest_paths = YenKSP(H, source, target, 'w')
+    else:
+        k_shortest_paths = EppsteinKSP(H, source, target, 'w')
+    k_shortest_paths.__next__()
+    k_shortest_paths.__next__()
     while True:
         iter_count += 1
         if iter_count % 20 == 0:

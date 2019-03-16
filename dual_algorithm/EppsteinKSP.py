@@ -5,7 +5,7 @@ import networkx as nx
 from copy import deepcopy
 from heapq import heappush, heappop
 
-from Bellman_Ford import shortest_path_bf
+from ShortestPath import shortest_path_bf
 from heap_tree import BinaryTree
 
 def EppsteinKSP(MultiGraph, source, target, weight):
